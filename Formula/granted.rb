@@ -22,17 +22,15 @@ class Granted < Formula
     # Install the entire scaffold directory to libexec
     libexec.install Dir["*"]
 
-    # Create a simple executable wrapper
-    (bin/"granted").write_env_script libexec/"start.sh",
-      PATH: "#{libexec}/node_modules/.bin:$PATH"
-
-    # Create the actual startup script
-    (libexec/"start.sh").write <<~EOS
+    # Create a simple executable wrapper that respects PORT env var
+    (bin/"granted").write <<~EOS
       #!/bin/bash
+      export PATH="#{libexec}/node_modules/.bin:$PATH"
+      export PORT="${PORT:-3000}"
       cd #{libexec}
-      PORT=${PORT:-3000} npx next start -H 127.0.0.1
+      exec npx next start -H 127.0.0.1
     EOS
-    (libexec/"start.sh").chmod 0755
+    (bin/"granted").chmod 0755
   end
 
   def post_install
