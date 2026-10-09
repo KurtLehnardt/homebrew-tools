@@ -7,7 +7,7 @@ class Granted < Formula
   version "1.0.1"
   license "MIT"
 
-  depends_on "node@20" => :build
+  depends_on "node@22" => :build
 
   def install
     # Navigate to the scaffold directory where package.json lives
@@ -19,12 +19,9 @@ class Granted < Formula
     # Build the Next.js application
     system "npm", "run", "build"
 
-    # Install the app to libexec (Homebrew's standard directory for managed apps)
-    libexec.install ".next", "public", "node_modules", "package.json", "next.config.ts", "package-lock.json"
-
-    # Copy application code directories
-    libexec.install "app" if Dir.exist?("app")
-    libexec.install "lib" if Dir.exist?("lib")
+    # Install the entire app to libexec (Homebrew's standard directory for managed apps)
+    # This includes .next, public, node_modules, all source files, and config
+    libexec.install Dir["*"]
 
     # Create a simple executable wrapper
     (bin/"granted").write_env_script libexec/"start.sh",
