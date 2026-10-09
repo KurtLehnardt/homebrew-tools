@@ -10,17 +10,16 @@ class Granted < Formula
   depends_on "node@22" => :build
 
   def install
-    # Navigate to the scaffold directory where package.json lives
+    # Build from the scaffold directory
     cd "scaffold"
 
-    # Install dependencies from the lock file (reproducible)
-    system "npm", "ci", "--omit=dev"
+    # Install scaffold dependencies from the lock file (reproducible)
+    system "npm", "ci"
 
     # Build the Next.js application
-    system "npm", "run", "build"
+    system "npm", "run", "build" || raise "Build failed"
 
-    # Install the entire app to libexec (Homebrew's standard directory for managed apps)
-    # This includes .next, public, node_modules, all source files, and config
+    # Install the entire scaffold directory to libexec
     libexec.install Dir["*"]
 
     # Create a simple executable wrapper
