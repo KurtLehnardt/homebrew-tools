@@ -19,8 +19,9 @@ class Granted < Formula
     # Build the Next.js application
     system "npm", "run", "build"
 
-    # Install the entire scaffold directory to libexec
+    # Install the entire scaffold directory to libexec (including hidden .next)
     libexec.install Dir["*"]
+    libexec.install ".next" if Dir.exist?(".next")
 
     # Create a simple executable wrapper that respects PORT env var
     (bin/"granted").write <<~EOS
