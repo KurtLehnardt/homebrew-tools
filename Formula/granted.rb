@@ -17,7 +17,7 @@ class Granted < Formula
     system "npm", "ci"
 
     # Build the Next.js application
-    system "npm", "run", "build" || raise "Build failed"
+    system "npm", "run", "build"
 
     # Install the entire scaffold directory to libexec
     libexec.install Dir["*"]
