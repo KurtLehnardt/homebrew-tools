@@ -10,8 +10,10 @@ class Granted < Formula
   depends_on "node@22" => :build
 
   def install
+    scaffold_dir = buildpath/"scaffold"
+
     # Build from the scaffold directory
-    cd "scaffold"
+    cd scaffold_dir
 
     # Install scaffold dependencies from the lock file (reproducible)
     system "npm", "ci"
@@ -19,9 +21,11 @@ class Granted < Formula
     # Build the Next.js application
     system "npm", "run", "build"
 
-    # Install the entire scaffold directory to libexec (including hidden .next)
-    libexec.install Dir["*"]
-    libexec.install ".next" if Dir.exist?(".next")
+    # Install the entire scaffold directory to libexec
+    libexec.install Dir["#{scaffold_dir}/*"].concat([
+      "#{scaffold_dir}/.next",
+      "#{scaffold_dir}/.gitignore",
+    ]).select { |p| File.exist?(p) }
 
     # Create a simple executable wrapper that respects PORT env var
     (bin/"granted").write <<~EOS
