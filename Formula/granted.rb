@@ -30,7 +30,7 @@ class Granted < Formula
     (libexec/"start.sh").write <<~EOS
       #!/bin/bash
       cd #{libexec}
-      PORT=3000 npx next start -H 127.0.0.1
+      PORT=${PORT:-3000} npx next start -H 127.0.0.1
     EOS
     (libexec/"start.sh").chmod 0755
   end
