@@ -15,11 +15,8 @@ class Granted < Formula
     # Build from the scaffold directory
     cd scaffold_dir
 
-    # Install scaffold dependencies from the lock file (reproducible)
+    # Install dependencies
     system "npm", "ci"
-
-    # Build the Next.js application
-    system "npm", "run", "build"
 
     # Install the entire scaffold directory to libexec
     libexec.install Dir["#{scaffold_dir}/*"].concat([
@@ -33,7 +30,7 @@ class Granted < Formula
       export PATH="#{libexec}/node_modules/.bin:$PATH"
       export PORT="${PORT:-3000}"
       cd #{libexec}
-      exec npx next start -H 127.0.0.1
+      exec npm run dev -- -H 127.0.0.1
     EOS
     (bin/"granted").chmod 0755
   end
