@@ -2,7 +2,7 @@ class Granted < Formula
   desc "Grant matching tool for finding funding opportunities"
   homepage "https://github.com/KurtLehnardt/granted"
   url "https://github.com/KurtLehnardt/granted.git",
-      tag:    "v1.0.1",
+      tag:    "v1.0.2",
       branch: "main"
   license "MIT"
 
