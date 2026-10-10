@@ -1,0 +1,84 @@
+name: Update formula to latest granted release
+
+# Keeps Formula/granted.rb pointed at the latest published release of
+# KurtLehnardt/granted, so `brew install`/`brew upgrade` always builds the
+# newest tag without anyone hand-editing the formula per release.
+#
+# No PAT needed: this only ever reads KurtLehnardt/granted's public release
+# list (no auth required) and writes to its own repo (the default
+# GITHUB_TOKEN already has that).
+#
+# Two jobs on purpose: `check` is cheap (ubuntu) and runs on every poll;
+# the expensive `build-and-publish` job (macOS, needed because the formula
+# is macOS-only) only runs when there's actually a new tag to move to, and
+# it proves the new tag builds -- via `brew install` from the edited
+# formula file, matching what a real user's `brew install` would do --
+# before anything is committed. A release that breaks the Homebrew build
+# fails this job loudly instead of silently shipping a broken tap.
+
+on:
+  schedule:
+    - cron: "0 * * * *" # hourly
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      needs_update: ${{ steps.compare.outputs.needs_update }}
+      latest_tag: ${{ steps.latest.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get latest granted release tag
+        id: latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=$(gh api repos/KurtLehnardt/granted/releases/latest --jq .tag_name)
+          echo "Latest release: $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Compare to the formula's current tag
+        id: compare
+        env:
+          LATEST: ${{ steps.latest.outputs.tag }}
+        run: |
+          current=$(grep -oE 'tag:\s*"v[0-9]+\.[0-9]+\.[0-9]+"' Formula/granted.rb | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')
+          echo "Current formula tag: $current"
+          if [ "$current" = "$LATEST" ]; then
+            echo "needs_update=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_update=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-publish:
+    needs: check
+    if: needs.check.outputs.needs_update == 'true'
+    runs-on: macos-latest
+    env:
+      TAG: ${{ needs.check.outputs.latest_tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Point the formula at the new tag
+        run: |
+          sed -i '' -E "s/tag:(\s*)\"v[0-9]+\.[0-9]+\.[0-9]+\"/tag:\1\"${TAG}\"/" Formula/granted.rb
+          cat Formula/granted.rb
+
+      - name: Validate the formula actually builds and installs
+        run: |
+          brew install --formula ./Formula/granted.rb
+          brew test granted
+          brew uninstall granted
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/granted.rb
+          git commit -m "Update granted formula to ${TAG}"
+          git push
