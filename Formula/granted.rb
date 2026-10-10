@@ -24,13 +24,15 @@ class Granted < Formula
       "#{scaffold_dir}/.gitignore",
     ]).select { |p| File.exist?(p) }
 
-    # Create a simple executable wrapper that respects PORT env var
+    # Create a simple executable wrapper that respects PORT env var.
+    # `npm run dev` already passes -H 127.0.0.1 (scaffold/package.json), so
+    # the wrapper only needs to set PORT and exec it.
     (bin/"granted").write <<~EOS
       #!/bin/bash
       export PATH="#{libexec}/node_modules/.bin:$PATH"
       export PORT="${PORT:-3000}"
       cd #{libexec}
-      exec npm run dev -- -H 127.0.0.1
+      exec npm run dev
     EOS
     (bin/"granted").chmod 0755
   end
