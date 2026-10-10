@@ -19,7 +19,7 @@ class Granted < Formula
 
     # Install the entire scaffold directory (including dotfiles like .next,
     # if present) to libexec, excluding "." and "..".
-    dotfiles = Dir["#{scaffold_dir}/.*"].reject { |p| File.basename(p) == "." || File.basename(p) == ".." }
+    dotfiles = Dir["#{scaffold_dir}/.*"].reject { |p| [".", ".."].include?(File.basename(p)) }
     libexec.install Dir["#{scaffold_dir}/*"], dotfiles
 
     # Create a simple executable wrapper that respects PORT env var.
