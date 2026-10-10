@@ -71,9 +71,13 @@ jobs:
 
       - name: Validate the formula actually builds and installs
         run: |
-          brew install --formula ./Formula/granted.rb
-          brew test granted
-          brew uninstall granted
+          # Homebrew refuses to install a loose formula file -- it must come
+          # from a tap -- so tap this checkout itself under a throwaway name.
+          brew tap local/granted-ci "$PWD"
+          brew install local/granted-ci/granted
+          brew test local/granted-ci/granted
+          brew uninstall local/granted-ci/granted
+          brew untap local/granted-ci
 
       - name: Commit and push
         run: |
