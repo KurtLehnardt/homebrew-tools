@@ -66,7 +66,10 @@ jobs:
 
       - name: Point the formula at the new tag
         run: |
-          sed -i '' -E "s/tag:(\s*)\"v[0-9]+\.[0-9]+\.[0-9]+\"/tag:\1\"${TAG}\"/" Formula/granted.rb
+          # macOS ships BSD sed: \s isn't supported even with -E (that's a
+          # GNU extension), so this uses [[:space:]] instead -- the earlier,
+          # Linux-run "check" job's grep could get away with \s, this can't.
+          sed -i '' -E "s/tag:([[:space:]]*)\"v[0-9]+\.[0-9]+\.[0-9]+\"/tag:\1\"${TAG}\"/" Formula/granted.rb
           cat Formula/granted.rb
 
       - name: Validate the formula actually builds and installs
