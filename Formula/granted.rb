@@ -49,7 +49,7 @@ class Granted < Formula
   end
 
   test do
-    assert_predicate libexec/".next", :exist?
     assert_predicate libexec/"node_modules", :exist?
+    assert_predicate libexec/"package.json", :exist?
   end
 end
