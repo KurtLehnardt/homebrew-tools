@@ -23,14 +23,24 @@ class Granted < Formula
     dotfiles = Dir["#{scaffold_dir}/.*"].reject { |p| dot_skip.include?(File.basename(p)) }
     libexec.install Dir["#{scaffold_dir}/*"], dotfiles
 
-    # Create a simple executable wrapper that respects PORT env var.
-    # `npm run dev` already passes -H 127.0.0.1 (scaffold/package.json), so
-    # the wrapper only needs to set PORT and exec it.
+    # Create an executable wrapper that auto-picks a free port, starting at
+    # 3000 (or wherever PORT points, if the user set one), so a user never
+    # has to pass a port in manually. `npm run dev` already passes
+    # -H 127.0.0.1 (scaffold/package.json), so the wrapper just needs to
+    # land on a free PORT before exec'ing it.
     (bin/"granted").write <<~EOS
       #!/bin/bash
       export PATH="#{libexec}/node_modules/.bin:$PATH"
-      export PORT="${PORT:-3000}"
       cd #{libexec}
+
+      port="${PORT:-3000}"
+      while (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; do
+        exec 3>&- 2>/dev/null
+        port=$((port + 1))
+      done
+      export PORT="$port"
+
+      echo "Starting Granted on http://127.0.0.1:$PORT"
       exec npm run dev
     EOS
     (bin/"granted").chmod 0755
@@ -45,8 +55,8 @@ class Granted < Formula
       To start Granted:
         granted
 
-      Then open your browser to: http://localhost:3000
-      (set PORT=xxxx before running `granted` to use a different port)
+      It automatically picks a free port starting at 3000 and prints the
+      URL to open once it's ready.
     EOS
   end
 
